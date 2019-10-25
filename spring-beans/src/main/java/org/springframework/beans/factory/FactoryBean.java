@@ -48,6 +48,10 @@ import org.springframework.lang.Nullable;
  * synchronization other than for purposes of lazy initialization within the
  * FactoryBean itself (or the like).
  *
+ * BeanFactory接口中有一个字符常量String FACTORY_BEAN_PREFIX = "&";
+ * 当我们去获取FactoryBean类型的bean时，如果beanName不加&则获取到对应bean的实例（getObject()）
+ * 如果beanName加上&，则获取到FactoryBean本身的实例
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @since 08.03.2003
@@ -74,6 +78,8 @@ public interface FactoryBean<T> {
 	 * @return an instance of the bean (can be {@code null})
 	 * @throws Exception in case of creation errors
 	 * @see FactoryBeanNotInitializedException
+	 *
+	 * 返回创建的实例
 	 */
 	@Nullable
 	T getObject() throws Exception;
@@ -96,6 +102,7 @@ public interface FactoryBean<T> {
 	 * @return the type of object that this FactoryBean creates,
 	 * or {@code null} if not known at the time of the call
 	 * @see ListableBeanFactory#getBeansOfType
+	 * 返回创建的实例的类型
 	 */
 	@Nullable
 	Class<?> getObjectType();
@@ -124,6 +131,7 @@ public interface FactoryBean<T> {
 	 * @return whether the exposed object is a singleton
 	 * @see #getObject()
 	 * @see SmartFactoryBean#isPrototype()
+	 * 控制是否是单例
 	 */
 	default boolean isSingleton() {
 		return true;
