@@ -71,15 +71,19 @@ import org.springframework.util.StringUtils;
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
 	/** Cache of singleton objects: bean name to bean instance. */
+	/** 缓存 <beanName, bean实例> */
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	/** Cache of singleton factories: bean name to ObjectFactory. */
+	/** 缓存 <beanName, beanFactory> */
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
 	/** Cache of early singleton objects: bean name to bean instance. */
+	/** 缓存 <beanName, bean实例> 该缓存主要为了解决bean的循环依赖引用 */
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
 	/** Set of registered singletons, containing the bean names in registration order. */
+	/** 缓存所有注册的单例的beanName */
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 	/** Names of beans that are currently in creation. */
@@ -174,15 +178,24 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+		// 1. 从缓存中获取bean
 		Object singletonObject = this.singletonObjects.get(beanName);
+		// 2. 未能获取到bean，但是允许对当前创建的单例的早期引用（决绝循环引用）
+		// spring只能解决单例的循环依赖问题
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
 			synchronized (this.singletonObjects) {
+				// 从earlySingletonObjects中获取提前曝光的bean
 				singletonObject = this.earlySingletonObjects.get(beanName);
+				// 未能获取到提前创建的bean且当前的bean允许创建早期依赖
 				if (singletonObject == null && allowEarlyReference) {
+					// 从缓存中获取BeanFactory
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
+						// 通过getObject()方法获取bean,注意:通过此方法获取的bean不是被缓存的
 						singletonObject = singletonFactory.getObject();
+						// 将获取到的singletonObject缓存至earlySingletonObjects
 						this.earlySingletonObjects.put(beanName, singletonObject);
+						// 从singletonFactories移除bean
 						this.singletonFactories.remove(beanName);
 					}
 				}

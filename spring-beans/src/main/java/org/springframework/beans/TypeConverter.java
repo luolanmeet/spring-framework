@@ -34,6 +34,7 @@ import org.springframework.lang.Nullable;
  * @since 2.0
  * @see SimpleTypeConverter
  * @see BeanWrapperImpl
+ * 类型转换器
  */
 public interface TypeConverter {
 
