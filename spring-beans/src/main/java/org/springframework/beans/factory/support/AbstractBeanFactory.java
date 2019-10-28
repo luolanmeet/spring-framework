@@ -259,7 +259,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
 
-		// 不能从缓存中获取bean，需要创建bean
+		// 3. 不能从缓存中获取bean，需要创建bean
 		else {
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
@@ -344,6 +344,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					});
 					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
+				
 				// 创建原型模式的bean实例
 				else if (mbd.isPrototype()) {
 					// It's a prototype -> create a new instance.
@@ -1664,6 +1665,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
 
 		// Don't let calling code try to dereference the factory if the bean isn't a factory.
+		// 判断bean是否是factoryBean，只是看beanName是不是有&前缀
 		if (BeanFactoryUtils.isFactoryDereference(name)) {
 			if (beanInstance instanceof NullBean) {
 				return beanInstance;
@@ -1676,22 +1678,30 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
+		// 如果不是factoryBean实例，则直接返回
+		// 如果是factoryBean实例且要返回factoryBean，则直接返回
 		if (!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) {
 			return beanInstance;
 		}
 
 		Object object = null;
+		// 如果beanDefinition为null，则尝试从缓存中获取给定的factoryBean对象
 		if (mbd == null) {
 			object = getCachedObjectForFactoryBean(beanName);
 		}
+		// 未能从缓存中获得factoryBean公开的对象，则说明该bean是一个新创建的bean
 		if (object == null) {
 			// Return bean instance from factory.
 			FactoryBean<?> factory = (FactoryBean<?>) beanInstance;
 			// Caches object obtained from FactoryBean if it is a singleton.
+			// rootBeanDefinition为null,但是在beanDefinitionMap中缓存了对应的beanName
 			if (mbd == null && containsBeanDefinition(beanName)) {
 				mbd = getMergedLocalBeanDefinition(beanName);
 			}
+			// 如果beanDefinition不为null,则要判断该beanDefinition对象是否通过合成获得,
+			// 如果不是,则说明该beanDefinition不由有程序本身定义的
 			boolean synthetic = (mbd != null && mbd.isSynthetic());
+			// 从给定的FactoryBean中获取指定的beanName对象
 			object = getObjectFromFactoryBean(factory, beanName, !synthetic);
 		}
 		return object;
