@@ -351,6 +351,7 @@ class BeanDefinitionValueResolver {
 	@Nullable
 	private Object resolveReference(Object argName, RuntimeBeanReference ref) {
 		try {
+			// 解析引用beanName
 			Object bean;
 			String refName = ref.getBeanName();
 			refName = String.valueOf(doEvaluate(refName));
@@ -363,6 +364,10 @@ class BeanDefinitionValueResolver {
 				}
 				bean = this.beanFactory.getParentBeanFactory().getBean(refName);
 			}
+			// 从当前beanFactory获取引用beanName实例
+			// 假设现在是处理bean A的依赖，A依赖了B，B也依赖了A，此时当前的bean A已经提前曝光，
+			// 通过getBean获取B的实例，到创建B时，B已经可以找到A的实例了（A提前曝光）。
+			// 因此也就解决了循环依赖
 			else {
 				bean = this.beanFactory.getBean(refName);
 				this.beanFactory.registerDependentBean(refName, this.beanName);

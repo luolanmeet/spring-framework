@@ -123,12 +123,14 @@ class ConstructorResolver {
 		Constructor<?> constructorToUse = null;
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
-
+		// 判断有无显示指定参数
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
+		// 没有显示指定参数，则解析配置文件中的参数
 		else {
 			Object[] argsToResolve = null;
+			// 优先从缓存中获取
 			synchronized (mbd.constructorArgumentLock) {
 				constructorToUse = (Constructor<?>) mbd.resolvedConstructorOrFactoryMethod;
 				if (constructorToUse != null && mbd.constructorArgumentsResolved) {
@@ -139,6 +141,7 @@ class ConstructorResolver {
 					}
 				}
 			}
+			// 缓存中存在，则解析构造函数参数类型
 			if (argsToResolve != null) {
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve, true);
 			}
@@ -172,12 +175,13 @@ class ConstructorResolver {
 					return bw;
 				}
 			}
-
+			
 			// Need to resolve the constructor.
+			// 需要去解析构造函数参数，以确认使用哪一个构造函数来进行实例化
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			ConstructorArgumentValues resolvedValues = null;
-
+			// 这个变量记录最小的构造函数参数个数
 			int minNrOfArgs;
 			if (explicitArgs != null) {
 				minNrOfArgs = explicitArgs.length;
@@ -188,11 +192,13 @@ class ConstructorResolver {
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
 
+			// 对构造函数按照参数个数和参数类型进行排序，参数最多的构造函数排在第一位
 			AutowireUtils.sortConstructors(candidates);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
+			// 循环所有bean类中的构造函数，解析确定使用哪一个构造函数
 			for (Constructor<?> candidate : candidates) {
 				Class<?>[] paramTypes = candidate.getParameterTypes();
 
@@ -276,6 +282,7 @@ class ConstructorResolver {
 						ambiguousConstructors);
 			}
 
+			// 缓存解析的构造函数
 			if (explicitArgs == null && argsHolderToUse != null) {
 				argsHolderToUse.storeCache(mbd, constructorToUse);
 			}
@@ -383,6 +390,9 @@ class ConstructorResolver {
 		Class<?> factoryClass;
 		boolean isStatic;
 
+		// 判断是静态工厂方法还是实例工厂方法
+		// 静态工厂方法是没有factoryBeanName的
+		// 如果factoryBeanName不为空，则为实例工厂方法
 		String factoryBeanName = mbd.getFactoryBeanName();
 		if (factoryBeanName != null) {
 			if (factoryBeanName.equals(beanName)) {
@@ -411,6 +421,7 @@ class ConstructorResolver {
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
 
+		// 有没有使用参数
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
