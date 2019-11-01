@@ -172,15 +172,18 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 				Node node = nl.item(i);
 				if (node instanceof Element) {
 					Element ele = (Element) node;
+					// 解析默认命名空间
 					if (delegate.isDefaultNamespace(ele)) {
 						parseDefaultElement(ele, delegate);
 					}
+					// 解析自定义命名空间
 					else {
 						delegate.parseCustomElement(ele);
 					}
 				}
 			}
 		}
+		// 解析自定义命名空间
 		else {
 			delegate.parseCustomElement(root);
 		}
